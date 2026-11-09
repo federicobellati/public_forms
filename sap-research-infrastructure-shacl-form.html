@@ -191,7 +191,7 @@
     </div></div></section>
     <noscript><p class="alert err">Attiva JavaScript per compilare il modulo.</p></noscript>
   </main>
-<script src=".shacl/vendor/n3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/n3@1.26.0/browser/n3.min.js"></script>
 <script id="embedded-profile" type="text/turtle">
 # CNR ISMAR Semantic Application Profile for Research Infrastructures 1.0.0
 # Profile and shape identifiers use the sapri namespace.
@@ -526,7 +526,7 @@ try {
   $('copyBtn').addEventListener('click',async () => { try { await navigator.clipboard.writeText(output); $('exportStatus').textContent = 'Turtle copiato.'; } catch { showTab($('tab-turtle')); $('turtleOutput').focus(); $('turtleOutput').select(); $('exportStatus').textContent = 'Premi Ctrl+C per copiare il testo selezionato.'; } });
   $('downloadBtn').addEventListener('click',() => { const url = URL.createObjectURL(new Blob([output],{type:'text/turtle;charset=utf-8'})); const a = document.createElement('a'); a.href = url; a.download = $('resourceID').value.trim() + '.ttl'; a.click(); setTimeout(() => URL.revokeObjectURL(url),1000); $('exportStatus').textContent = 'Turtle scaricato.'; });
   update();
-} catch (error) { $('shapeStatus').textContent = 'Impossibile caricare il modulo: ' + error.message + '. Conserva la cartella .shacl/vendor accanto alla pagina HTML.'; $('shapeStatus').className = 'alert err'; }
+} catch (error) { $('shapeStatus').textContent = 'Impossibile caricare il modulo: ' + error.message + '. Verifica la connessione Internet e che la CDN cdn.jsdelivr.net sia accessibile.'; $('shapeStatus').className = 'alert err'; }
 </script>
 </body>
 </html>
