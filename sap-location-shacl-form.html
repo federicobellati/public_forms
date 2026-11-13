@@ -185,7 +185,7 @@
           </div>
           <button id="loadShapeBtn" type="button">↻ Leggi URL</button>
         </div>
-        <p id="shapeStatus" class="smallStatus">Profilo predefinito SAP Location 1.0.0 caricato nel form.</p>
+        <p id="shapeStatus" class="smallStatus" role="status" aria-live="polite">Profilo predefinito SAP Location 1.0.0 caricato nel form.</p>
       </div>
     </section>
 
@@ -985,7 +985,41 @@
     });
   }
 
-  function boot() {
+  async function loadLocationFromRegistry() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (id === null) return;
+    const status = document.getElementById('shapeStatus');
+    const controls = [...document.querySelectorAll('input, textarea, button')].filter(control => !control.disabled);
+    controls.forEach(control => { control.disabled = true; });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    status.textContent = 'Caricamento della location dal registro…';
+    try {
+      if (!id || id.length > 200 || /[\u0000-\u0020<>"{}|^`\\/?#]/u.test(id)) throw new Error('Identificativo della location non valido.');
+      const iri = LOCATION_BASE + id;
+      const url = new URL('https://fuseki.ve.ismar.cnr.it/locreg/query');
+      url.searchParams.set('query', `CONSTRUCT { ?s ?p ?o } WHERE {
+        { VALUES ?s { <${iri}> <${iri}.ttl> } ?s ?p ?o }
+        UNION { <${iri}> <${PREFIXES.geo}hasGeometry> ?s . ?s ?p ?o }
+        UNION { <${iri}.ttl> (<${PREFIXES.dcat}contactPoint>|<${PREFIXES.dcterms}publisher>) ?s . ?s ?p ?o }
+      }`);
+      const response = await fetch(url, { headers: { Accept: 'text/turtle' }, credentials: 'omit', cache: 'no-store', signal: controller.signal });
+      if (!response.ok) throw new Error(`Il registro non è disponibile (HTTP ${response.status}).`);
+      if (!(response.headers.get('Content-Type') || '').toLowerCase().includes('text/turtle')) throw new Error('Il registro ha restituito un formato inatteso.');
+      const parsed = parseUploadedTurtle(await response.text());
+      if (parsed.id !== id) throw new Error('La location ricevuta non corrisponde a quella richiesta.');
+      setForm({ ...parsed, modified: new Date().toISOString() });
+      status.textContent = `Location ${id} caricata dal registro. Identificativi e data di creazione conservati; data di modifica aggiornata come nell’importazione locale. Le modifiche restano nel modulo: scarica il Turtle per salvarle.`;
+    } catch (error) {
+      status.textContent = `Caricamento della location non riuscito: ${error.name === 'AbortError' ? 'il registro non ha risposto in tempo.' : error.message} Ricarica la pagina per riprovare oppure importa un Turtle locale.`;
+    } finally {
+      clearTimeout(timeout);
+      controls.forEach(control => { control.disabled = false; });
+      updateDerived();
+    }
+  }
+
+  async function boot() {
     initHelp();
     el.shapeUrl.value = DEFAULT_SHAPE_URL;
     el.shapeVersion.value = SAP_VERSION;
@@ -998,7 +1032,7 @@
     el.notation.dataset.auto = 'true';
     wireEvents();
     updateDerived();
-    if (typeof window !== 'undefined') { loadCoordinateMap(); loadInfrastructures(); }
+    if (typeof window !== 'undefined') { await loadLocationFromRegistry(); loadCoordinateMap(); loadInfrastructures(); }
   }
 
   boot();
