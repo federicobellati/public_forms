@@ -774,6 +774,31 @@ function importTurtle(text, filename) {
   update(); renderIssues($('importValidationResult'),issues,'File originale: '+filename,'Controlli del profilo superati prima delle modifiche.');
   $('importStatus').textContent = 'File caricato: '+filename+'. '+(issues.length ? 'Vedi i problemi del file originale in Validazione. ' : '')+'I metadati fissi sono applicati al documento generato. Le proprietà aggiuntive e i tag di lingua sono conservati; il modulo gestisce un Asset per file.';
 }
+async function loadFacilityFromURL() {
+  const ids = new URLSearchParams(globalThis.location?.search || '').getAll('id');
+  if (!ids.length) return;
+  try {
+    if (ids.length !== 1 || ids[0] !== ids[0].trim() || !idValid(ids[0])) throw new Error('Parametro id non valido: specifica un solo identificativo con lettere ASCII, cifre, trattini o underscore, iniziando con una lettera o cifra.');
+    const id = ids[0], resource = PREFIXES.facreg+id;
+    $('importStatus').textContent = 'Caricamento della facility '+id+' dal registro…';
+    const path = '(<'+PREFIXES.prov+'qualifiedAttribution>|<'+PREFIXES.prov+'agent>|<'+PREFIXES.dcat+'contactPoint>|<'+PREFIXES.dcterms+'publisher>)*';
+    const pattern = '?root '+path+' ?s . ?s ?p ?o .';
+    const query = 'CONSTRUCT { ?s ?p ?o } WHERE { VALUES ?root { <'+resource+'> <'+resource+'.ttl> } { '+pattern+' } UNION { GRAPH ?graph { '+pattern+' } } }';
+    let response, text;
+    try {
+      response = await fetch('https://fuseki.ve.ismar.cnr.it/facreg/query?query='+encodeURIComponent(query),{headers:{Accept:'text/turtle'},cache:'no-store',credentials:'omit',signal:AbortSignal.timeout(15000)});
+      if (response.ok) text = await response.text();
+    } catch (error) { throw new Error(error.name === 'TimeoutError' ? 'Tempo di attesa scaduto durante il caricamento da Fuseki (15 secondi). Ricarica la pagina per riprovare.' : 'Errore di rete durante il caricamento da Fuseki. Verifica la connessione e l’accesso al registro, poi ricarica la pagina per riprovare.'); }
+    if (!response.ok) throw new Error('Errore del registro Fuseki: HTTP '+response.status+'. Ricarica la pagina per riprovare.');
+    const data = new N3.Store(new N3.Parser({format:'text/turtle'}).parse(text));
+    if (!data.countQuads(nn(resource),nn(PREFIXES.rdf+'type'),nn(PREFIXES.sosa+'Asset'),null)) throw new Error('Facility inesistente: nessun sosa:Asset con identificativo '+id+' nel registro.');
+    importTurtle(text,id+'.ttl');
+    $('importStatus').textContent = 'Facility '+id+' caricata dal registro. '+$('importStatus').textContent;
+  } catch (error) {
+    $('importStatus').textContent = 'Caricamento da URL non riuscito: '+error.message;
+    renderIssues($('importValidationResult'),[error.message],'Facility non caricata','');
+  }
+}
 function initialize() {
   for (const property of properties(assetShape)) {
     if (one(property,'hasValue')) continue;
@@ -793,7 +818,7 @@ function initialize() {
   $('downloadBtn').addEventListener('click',() => { const url = URL.createObjectURL(new Blob([output],{type:'text/turtle;charset=utf-8'})), link = document.createElement('a'); link.href = url; link.download = $('resourceID').value.trim()+'.ttl'; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000); $('exportStatus').textContent = 'Turtle scaricato.'; });
   $('profileDownload').addEventListener('click',() => { const url = URL.createObjectURL(new Blob([$('embedded-profile').textContent],{type:'text/turtle;charset=utf-8'})), link = document.createElement('a'); link.href = url; link.download = 'profile.ttl'; link.click(); setTimeout(() => URL.revokeObjectURL(url),1000); });
   $('heroVersion').textContent = objects(shapes,nn(BASE),PREFIXES.dcat+'version')[0].value;
-  $('shapeStatus').textContent = 'Profilo Facility integrato: AssetShape e MetadataDocumentShape. Libreria Turtle caricata da CDN.'; update(); loadOrganizations();
+  $('shapeStatus').textContent = 'Profilo Facility integrato: AssetShape e MetadataDocumentShape. Libreria Turtle caricata da CDN.'; update(); loadOrganizations(); loadFacilityFromURL();
 }
 initialize();
 
