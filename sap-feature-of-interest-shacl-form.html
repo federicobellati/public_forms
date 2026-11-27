@@ -207,7 +207,7 @@
 
             <div class="grid two">
               <div class="field">
-                <label for="waterBody">Corpo idrico *</label>
+                <label for="waterBody">Ambiente osservato *</label>
                 <select id="waterBody" required>
                   <option value="">Seleziona…</option>
                   <option value="Ocean">Ocean</option>
@@ -219,18 +219,25 @@
                   <option value="Lake">Lake</option>
                   <option value="Marshland">Marshland</option>
                   <option value="Glacier">Glacier</option>
+                  <option value="Atmosphere">Atmosphere</option>
                 </select>
               </div>
               <div class="field">
-                <label for="compartment">Compartimento idrologico *</label>
-                <select id="compartment" required>
+                <label for="compartment">Compartimento osservato *</label>
+                <select id="compartment" required disabled>
                   <option value="">Seleziona…</option>
                   <option value="Surface_Water">Surface Water</option>
                   <option value="Subsurface_Water">Subsurface Water</option>
                   <option value="Deep_Water">Deep Water</option>
                   <option value="Bottom_Water">Bottom Water</option>
                   <option value="Water_Column">Water Column</option>
+                  <option value="Near-surface_Air" data-atmosphere="true">Near-surface Air</option>
+                  <option value="Atmospheric_Boundary_Layer" data-atmosphere="true">Atmospheric Boundary Layer</option>
+                  <option value="Free_Troposphere" data-atmosphere="true">Free Troposphere</option>
+                  <option value="Atmospheric_Column" data-atmosphere="true">Atmospheric Column</option>
                 </select>
+                <p class="help">Seleziona prima l’ambiente: cinque compartimenti per l’acqua, quattro per Atmosphere. Le categorie possono sovrapporsi.</p>
+                <p class="help">Riferimenti atmosferici: <a href="https://space.oscar.wmo.int/layers" target="_blank" rel="noopener">WMO OSCAR Near Surface</a>, <a href="http://vocab.nerc.ac.uk/collection/L13/current/AB/" target="_blank" rel="noopener">SeaVoX L13 AB</a>, <a href="http://codes.wmo.int/wmdr/ObservedLayer/freeTroposphere" target="_blank" rel="noopener">WMO Free troposphere</a>, <a href="http://vocab.nerc.ac.uk/collection/P38/current/atmosphere_layer/" target="_blank" rel="noopener">NERC P38 atmosphere_layer</a>. Near-surface Air e Atmospheric Column sono etichette locali basate su queste fonti. La geometria resta POINT Z: l’eventuale estensione verticale va spiegata nella descrizione.</p>
               </div>
               <div class="field">
                 <label for="siteLabel">Compact Site Label *</label>
@@ -338,7 +345,7 @@
               <strong id="depictionLabel">Immagine / foaf:depiction *</strong>
               <input id="depiction" type="hidden" />
               <img id="depictionPreview" width="450" height="450" alt="" hidden />
-              <p class="help" id="depictionStatus" role="status">Seleziona corpo idrico e compartimento idrologico per visualizzare l’immagine.</p>
+              <p class="help" id="depictionStatus" role="status">Seleziona ambiente osservato e compartimento osservato per visualizzare l’immagine.</p>
               <p class="help" data-help="depiction"></p>
             </div>
           </div>
@@ -416,10 +423,10 @@
           <div class="sourceBox">
             <h3>Vincoli SHACL implementati in questo test locale</h3>
             <ul>
-              <li>ID generato da corpo idrico, compartimento idrologico (Water → WT), Compact Site Label obbligatoria di almeno 3 caratteri e valore verticale della geometria (P/N per il segno, D per i decimali), senza separatore fra Compact Site Label e suffisso; IRI sotto <span class="mono">https://w3id.org/cnr-ismar/features-of-interest-registry/{ID}</span>.</li>
+              <li>ID generato da ambiente osservato, compartimento osservato (Water → WT), Compact Site Label obbligatoria di almeno 3 caratteri e valore verticale della geometria (P/N per il segno, D per i decimali), senza separatore fra Compact Site Label e suffisso; IRI sotto <span class="mono">https://w3id.org/cnr-ismar/features-of-interest-registry/{ID}</span>.</li>
               <li><span class="mono">rdf:type sosa:FeatureOfInterest, geo:Feature</span> e geometria <span class="mono">geo:Geometry</span>.</li>
-              <li><span class="mono">rdfs:label</span>, <span class="mono">skos:prefLabel</span> e <span class="mono">dcterms:title</span> obbligatori, identici e generati in <span class="mono">@en</span>: compartimento per esteso, corpo idrico per esteso, Extended Site Label e valore verticale con segno +/−, punto decimale e unità m. Gli spazi sono consentiti.</li>
-              <li><span class="mono">skos:notation</span>: usa sempre le sigle di corpo idrico e compartimento, mantenendo WT per Water, entro 35 caratteri. Compact Site Label e suffisso restano integri; UUID v4 distinto dall’ID descrittivo.</li>
+              <li><span class="mono">rdfs:label</span>, <span class="mono">skos:prefLabel</span> e <span class="mono">dcterms:title</span> obbligatori, identici e generati in <span class="mono">@en</span>: compartimento per esteso, ambiente osservato per esteso, Extended Site Label e valore verticale con segno +/−, punto decimale e unità m. Gli spazi sono consentiti.</li>
+              <li><span class="mono">skos:notation</span>: usa sempre le sigle di ambiente osservato e compartimento, mantenendo WT per Water, entro 35 caratteri. Compact Site Label e suffisso restano integri; UUID v4 distinto dall’ID descrittivo.</li>
               <li>Licenza CC BY 4.0 e publisher CNR ISMAR completo di tipi, nome e ROR.</li>
               <li>Autore ORCID fisso e un solo <span class="mono">dcat:contactPoint</span> di tipo <span class="mono">vcard:Individual</span>, con nome Federico Bellati ed email <span class="mono">mailto:federico.bellati@cnr.it</span>.</li>
               <li>Un solo valore fisso per <span class="mono">dcterms:rights</span> (testo @en sui soli metadati) e <span class="mono">dcterms:accessRights</span> (IRI PUBLIC).</li>
@@ -427,7 +434,7 @@
               <li>UUID v4 autonomo della Geometry e collegamenti reciproci alla Feature.</li>
               <li>Geometria obbligatoria <span class="mono">POINT Z(lon lat elevation)</span> EPSG:4979 con range su longitude/latitude.</li>
               <li><span class="mono">geo:hasMetricSpatialAccuracy</span>: in questo profilo indica solo l'accuratezza verticale della quota, obbligatoria, non negativa, espressa in metri.</li>
-              <li>URI HTTP/HTTPS obbligatorio per <span class="mono">foaf:depiction</span>, compilato automaticamente dalla combinazione di corpo idrico e compartimento idrologico.</li>
+              <li>URI HTTP/HTTPS obbligatorio per <span class="mono">foaf:depiction</span>, compilato automaticamente dalla combinazione di ambiente osservato e compartimento osservato.</li>
             </ul>
           </div>
           <div id="validationResult" class="grid"></div>
@@ -486,7 +493,7 @@
   const LEGACY_INSPIRE_EF = 'http://inspire.ec.europa.eu/theme/ef';
   const CRS_4979 = 'http://www.opengis.net/def/crs/EPSG/0/4979';
   const SAP_VERSION = '1.0.0';
-  const FEATURE_ID_RE = /^(Ocean|Sea|Coast|Lagoon|River|Estuary|Lake|Marshland|Glacier)_(Surface_WT|Subsurface_WT|Deep_WT|Bottom_WT|WT_Column)_([A-Za-z0-9][A-Za-z0-9_]+[A-Za-z0-9])([PN])((?:0|[1-9][0-9]*)(?:D[0-9]*[1-9])?)$/;
+  const FEATURE_ID_RE = /^(?=(?:(?:Ocean|Sea|Coast|Lagoon|River|Estuary|Lake|Marshland|Glacier)_(?:Surface_WT|Subsurface_WT|Deep_WT|Bottom_WT|WT_Column)|Atmosphere_(?:Near-surface_Air|Atmospheric_Boundary_Layer|Free_Troposphere|Atmospheric_Column))_)([A-Za-z]+)_(Surface_WT|Subsurface_WT|Deep_WT|Bottom_WT|WT_Column|Near-surface_Air|Atmospheric_Boundary_Layer|Free_Troposphere|Atmospheric_Column)_([A-Za-z0-9][A-Za-z0-9_]+[A-Za-z0-9])([PN])((?:0|[1-9][0-9]*)(?:D[0-9]*[1-9])?)$/;
   const LICENSE = 'https://creativecommons.org/licenses/by/4.0/';
   const CREATOR = '0009-0000-9657-919X';
   const CONTACT_NAME = 'Federico Bellati';
@@ -497,16 +504,16 @@
 
   const HELP = {
     shapeUrl: 'URL del profilo con i vincoli SHACL usato come riferimento semantico e di validazione. Se il profilo cambia versione, il Turtle esportato deve dichiarare chiaramente a quale URL e versione fa riferimento.',
-    id: 'ID descrittivo: {WaterBody}_{HydrologicalCompartment}_{SiteLabel}{P|N}{Value}. Solo Water diventa WT. P indica un valore positivo o zero, N negativo, D i decimali. Esempio: Lagoon_Bottom_WT_Venice_NorthN10D5. Il suffisso usa Elevation senza conversione del riferimento verticale. Il limite di 35 caratteri riguarda soltanto skos:notation.',
+    id: 'ID descrittivo: {Environment}_{Compartment}_{SiteLabel}{P|N}{Value}. Solo Water diventa WT. P indica un valore positivo o zero, N negativo, D i decimali. Esempio: Lagoon_Bottom_WT_Venice_NorthN10D5. Il suffisso usa Elevation senza conversione del riferimento verticale. Il limite di 35 caratteri riguarda soltanto skos:notation.',
     siteLabel: 'Testo libero in inglese, obbligatorio, di almeno 3 caratteri esclusi gli spazi iniziali e finali. Nell’ID gli accenti vengono rimossi e spazi/simboli diventano underscore; devono restare almeno 3 caratteri. La reimportazione recupera questa forma normalizzata dall’ID.',
     extendedSiteLabel: 'Testo libero in inglese, obbligatorio, usato nelle tre etichette semantiche generate. Spazi e caratteri ordinari vengono conservati. Non modifica ID e skos:notation; viene recuperato dall’etichetta quando ricarichi un Turtle nel nuovo formato.',
-    label: 'Nome generato automaticamente: compartimento idrologico per esteso, corpo idrico per esteso, Extended Site Label e valore Elevation con segno +/−, punto decimale e unità m. Emesso come rdfs:label @en, identico a skos:prefLabel e dcterms:title.',
+    label: 'Nome generato automaticamente: compartimento osservato per esteso, ambiente osservato per esteso, Extended Site Label e valore Elevation con segno +/−, punto decimale e unità m. Emesso come rdfs:label @en, identico a skos:prefLabel e dcterms:title.',
     title: 'Titolo generato automaticamente con la stessa regola del nome. Emesso come dcterms:title @en, identico a rdfs:label e skos:prefLabel.',
     prefLabel: 'Etichetta preferita generata automaticamente con la stessa regola del nome. Emessa come skos:prefLabel @en, identica a rdfs:label e dcterms:title.',
-    notation: 'Usa sempre le sigle soltanto qui: Ocean OC, Sea SE, Coast CO, Lagoon LG, River RI, Estuary ES, Lake LK, Marshland MA, Glacier GL; Surface Water SWT, Subsurface Water SSWT, Deep Water DWT, Bottom Water BWT, Water Column WTC. WT significa Water. Compact Site Label e suffisso restano integri. Se supera 35 caratteri, abbrevia Compact Site Label o personalizza questo ID. Sono ammessi lettere ASCII, numeri e underscore; per un datasetID ERDDAP serve una lettera iniziale. L’uso come @iot.id FROST richiede ID di tipo STRING.',
+    notation: 'Usa sempre le sigle soltanto qui: Ocean OC, Sea SE, Coast CO, Lagoon LG, River RI, Estuary ES, Lake LK, Marshland MA, Glacier GL, Atmosphere AT; Surface Water SWT, Subsurface Water SSWT, Deep Water DWT, Bottom Water BWT, Water Column WTC; Near-surface Air NSA, Atmospheric Boundary Layer ABL, Free Troposphere FT, Atmospheric Column ATC. Sono sigle locali. WT significa Water. Compact Site Label e suffisso restano integri. Se supera 35 caratteri, abbrevia Compact Site Label o personalizza questo ID. Sono ammessi lettere ASCII, numeri e underscore; per un datasetID ERDDAP serve una lettera iniziale. L’uso come @iot.id FROST richiede ID di tipo STRING.',
     identifier: 'Identificatore UUID versione 4 generato dal sistema per la feature of interest. Deve essere espresso come xsd:string nella rappresentazione testuale canonica UUID.',
     description: 'Descrizione testuale della feature of interest. Viene emessa come dcterms:description con language tag @en e deve contenere almeno tre caratteri.',
-    depiction: 'Immagine associata automaticamente a corpo idrico e compartimento idrologico. Il relativo indirizzo è incluso nel Turtle come foaf:depiction obbligatorio.',
+    depiction: 'Immagine associata automaticamente a ambiente osservato e compartimento osservato. Il relativo indirizzo è incluso nel Turtle come foaf:depiction obbligatorio.',
     accuracy: "Accuratezza della sola componente verticale: la quota ellissoidica indicata in Elevation. Non riguarda longitudine o latitudine. Inserire un valore numerico non negativo, espresso in metri.",
     geometry: 'La feature of interest deve avere esattamente una geometria GeoSPARQL con un proprio UUID v4 e IRI. La Feature punta alla geometria con geo:hasGeometry; la geometria rimanda alla stessa Feature con dcterms:isPartOf. La geometria è codificata come WKT tridimensionale EPSG:4979 nel formato POINT Z(longitude latitude elevation). Longitudine e latitudine sono in gradi decimali; elevazione in metri.',
     geometryIdentifier: 'UUID v4 autonomo della geometria, diverso da quello della feature of interest. È usato in dcterms:identifier e nell’IRI https://w3id.org/cnr-ismar/features-of-interest-registry/{ID}.ttl#geometry-{UUID}, che identifica la geometria nel documento della Feature of Interest. Rimane stabile durante la compilazione e viene conservato quando si ricarica un Turtle esportato.',
@@ -541,8 +548,8 @@
   function compactNotation(id) {
     const parts = id.match(FEATURE_ID_RE);
     if (!parts) return '';
-    const waterCodes = { Ocean: 'OC', Sea: 'SE', Coast: 'CO', Lagoon: 'LG', River: 'RI', Estuary: 'ES', Lake: 'LK', Marshland: 'MA', Glacier: 'GL' };
-    const compartmentCodes = { Surface_WT: 'SWT', Subsurface_WT: 'SSWT', Deep_WT: 'DWT', Bottom_WT: 'BWT', WT_Column: 'WTC' };
+    const waterCodes = { Ocean: 'OC', Sea: 'SE', Coast: 'CO', Lagoon: 'LG', River: 'RI', Estuary: 'ES', Lake: 'LK', Marshland: 'MA', Glacier: 'GL', Atmosphere: 'AT' };
+    const compartmentCodes = { Surface_WT: 'SWT', Subsurface_WT: 'SSWT', Deep_WT: 'DWT', Bottom_WT: 'BWT', WT_Column: 'WTC', 'Near-surface_Air': 'NSA', Atmospheric_Boundary_Layer: 'ABL', Free_Troposphere: 'FT', Atmospheric_Column: 'ATC' };
     return `${waterCodes[parts[1]]}_${compartmentCodes[parts[2]]}_${parts[3]}${parts[4]}${parts[5]}`;
   }
 
@@ -625,7 +632,7 @@
     const numberRe = /^[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?$/i;
     if (form.siteLabel.length < 3 || form.siteToken.length < 3) issues.push('Compact Site Label obbligatoria: almeno 3 caratteri dopo la rimozione degli spazi esterni e almeno 3 nella forma normalizzata per l’ID.');
     if (!form.extendedSiteLabel) issues.push('Extended Site Label obbligatoria per generare rdfs:label, skos:prefLabel e dcterms:title.');
-    if (!FEATURE_ID_RE.test(form.id)) issues.push('Per generare un ID valido servono corpo idrico, compartimento idrologico, Compact Site Label e un valore Elevation valido.');
+    if (!FEATURE_ID_RE.test(form.id)) issues.push('Per generare un ID valido servono ambiente osservato, compartimento osservato, Compact Site Label e un valore Elevation valido.');
     if (!form.label || form.label.length < 3) issues.push('rdfs:label @en obbligatorio e lungo almeno 3 caratteri.');
     if (!form.title || form.title.length < 3) issues.push('dcterms:title @en obbligatorio e lungo almeno 3 caratteri.');
     if (form.label !== form.title) issues.push('rdfs:label e dcterms:title devono essere identici.');
@@ -652,7 +659,7 @@
     if (form.accuracy === '') issues.push("Accuratezza verticale obbligatoria: descrive solo l'accuratezza della quota ellissoidica, espressa in metri.");
     else if (!numberRe.test(form.accuracy) || !Number.isFinite(accuracy) || accuracy < 0) issues.push('Accuratezza verticale non valida: deve essere un numero non negativo espresso in metri.');
 
-    if (!isIRI(form.depiction)) issues.push('foaf:depiction obbligatorio: selezionare corpo idrico e compartimento idrologico per associare automaticamente l’immagine.');
+    if (!isIRI(form.depiction)) issues.push('foaf:depiction obbligatorio: selezionare ambiente osservato e compartimento osservato per associare automaticamente l’immagine.');
     if (!form.shapeUrl || !isIRI(form.shapeUrl)) issues.push('URL del profilo obbligatorio e deve essere un IRI HTTP/HTTPS.');
     if (!form.documentVersion?.trim()) issues.push('Versione del documento obbligatoria: inserisci un valore per dcat:version.');
     if (!form.shapeVersion) issues.push('Versione del profilo obbligatoria: deve essere salvata nel Turtle generato.');
@@ -691,7 +698,7 @@
     const feature = features[0];
     const localId = feature.value.slice((feature.value.startsWith(LOCATION_BASE) ? LOCATION_BASE : LEGACY_LOCATION_BASE).length);
     const selection = localId.match(FEATURE_ID_RE);
-    if (!selection) throw new Error('L’ID deve contenere corpo idrico, compartimento con WT, Compact Site Label di almeno 3 caratteri e suffisso P/N con eventuali decimali D. Gli ID precedenti senza Compact Site Label non vengono convertiti automaticamente.');
+    if (!selection) throw new Error('L’ID deve contenere ambiente osservato, compartimento con WT, Compact Site Label di almeno 3 caratteri e suffisso P/N con eventuali decimali D. Gli ID precedenti senza Compact Site Label non vengono convertiti automaticamente.');
     const objects = (subject, predicate) => store.getObjects(subject, namedNode(predicate), null);
     const value = (subject, predicate) => objects(subject, predicate)[0]?.value || '';
     const geometry = objects(feature, PREFIXES.geo + 'hasGeometry')[0];
@@ -810,6 +817,10 @@
   }
 
   function updateDerived(keepMapView = false) {
+    const atmospheric = el.waterBody.value === 'Atmosphere';
+    for (const option of el.compartment.options) option.hidden = option.disabled = !!option.value && (!el.waterBody.value || atmospheric !== (option.dataset.atmosphere === 'true'));
+    if (el.compartment.selectedOptions[0]?.disabled) el.compartment.value = '';
+    el.compartment.disabled = !el.waterBody.value;
     const imageName = el.waterBody.value && el.compartment.value ? `${el.waterBody.value === 'Coast' ? 'Coastal' : el.waterBody.value}_${el.compartment.value}.avif` : '';
     el.depiction.value = imageName ? `${PREFIXES.foireg}${imageName}` : '';
     const preview = document.getElementById('depictionPreview');
@@ -817,7 +828,7 @@
     if (preview.getAttribute('src') !== (imageUrl || null)) {
       preview.hidden = !imageUrl;
       preview.alt = imageName ? `${el.compartment.value.replace(/_/g, ' ')} ${el.waterBody.value}` : '';
-      document.getElementById('depictionStatus').textContent = imageUrl ? 'Caricamento immagine…' : 'Seleziona corpo idrico e compartimento idrologico per visualizzare l’immagine.';
+      document.getElementById('depictionStatus').textContent = imageUrl ? 'Caricamento immagine…' : 'Seleziona ambiente osservato e compartimento osservato per visualizzare l’immagine.';
       if (imageUrl) preview.src = imageUrl;
       else preview.removeAttribute('src');
     }
