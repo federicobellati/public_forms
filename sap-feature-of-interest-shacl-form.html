@@ -962,7 +962,41 @@
     });
   }
 
-  function boot() {
+  async function loadFeatureOfInterestFromRegistry() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (id === null) return;
+    const status = document.getElementById('shapeStatus');
+    const controls = [...document.querySelectorAll('input, select, textarea, button')].filter(control => !control.disabled);
+    controls.forEach(control => { control.disabled = true; });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+    status.textContent = 'Caricamento della Feature of Interest dal registro…';
+    try {
+      if (!FEATURE_ID_RE.test(id)) throw new Error('Identificativo della Feature of Interest non valido.');
+      const iri = LOCATION_BASE + id;
+      const url = new URL('https://fuseki.ve.ismar.cnr.it/foireg/query');
+      url.searchParams.set('query', `CONSTRUCT { ?s ?p ?o } WHERE {
+        { VALUES ?s { <${iri}> <${iri}.ttl> } ?s ?p ?o }
+        UNION { <${iri}> <${PREFIXES.geo}hasGeometry> ?s . ?s ?p ?o }
+        UNION { <${iri}.ttl> (<${PREFIXES.dcat}contactPoint>|<${PREFIXES.dcterms}publisher>) ?s . ?s ?p ?o }
+      }`);
+      const response = await fetch(url, { headers: { Accept: 'text/turtle' }, credentials: 'omit', cache: 'no-store', signal: controller.signal });
+      if (!response.ok) throw new Error(`Il registro non è disponibile (HTTP ${response.status}).`);
+      if (!(response.headers.get('Content-Type') || '').toLowerCase().includes('text/turtle')) throw new Error('Il registro ha restituito un formato inatteso.');
+      const parsed = parseUploadedTurtle(await response.text());
+      if (parsed.id !== id) throw new Error('La Feature of Interest ricevuta non corrisponde a quella richiesta.');
+      setForm({ ...parsed, modified: new Date().toISOString() });
+      status.textContent = `Feature of Interest ${id} caricata dal registro. Identificativi e data di creazione conservati; data di modifica aggiornata come nell’importazione locale. Le modifiche restano nel modulo: scarica il Turtle per salvarle.`;
+    } catch (error) {
+      status.textContent = `Caricamento della Feature of Interest non riuscito: ${error.name === 'AbortError' ? 'il registro non ha risposto in tempo.' : error.message} Ricarica la pagina per riprovare oppure importa un Turtle locale.`;
+    } finally {
+      clearTimeout(timeout);
+      controls.forEach(control => { control.disabled = false; });
+      updateDerived();
+    }
+  }
+
+  async function boot() {
     initHelp();
     el.shapeUrl.value = DEFAULT_SHAPE_URL;
     el.shapeVersion.value = SAP_VERSION;
@@ -975,7 +1009,7 @@
     el.notation.dataset.auto = 'true';
     wireEvents();
     updateDerived();
-    if (typeof window !== 'undefined') loadCoordinateMap();
+    if (typeof window !== 'undefined') { await loadFeatureOfInterestFromRegistry(); loadCoordinateMap(); }
   }
 
   boot();
